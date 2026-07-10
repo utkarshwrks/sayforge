@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 70% -10%, rgba(255, 138, 61, 0.08), transparent 60%),
+    #0b0e14;
+  color: #e6e9ef;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Thin custom scrollbars for the dark theme */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #232a38;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #2f3849;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-forge-accent text-[#1a0e05] hover:bg-forge-accent2;
+  }
+  .btn-ghost {
+    @apply border border-forge-border bg-transparent text-forge-text hover:border-forge-accent/60 hover:text-white;
+  }
+  .btn-danger {
+    @apply border border-forge-fail/40 text-forge-fail hover:bg-forge-fail/10;
+  }
+  .card {
+    @apply rounded-xl border border-forge-border bg-forge-card;
+  }
+  .chip {
+    @apply cursor-pointer rounded-full border border-forge-border bg-forge-panel px-3 py-1.5 text-xs text-forge-muted transition-colors hover:border-forge-accent/60 hover:text-white;
+  }
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+}
+
+/* Subtle pulse for pending/loading states */
+@keyframes forgepulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+.animate-forgepulse {
+  animation: forgepulse 1.4s ease-in-out infinite;
+}
