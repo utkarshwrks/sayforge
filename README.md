@@ -76,21 +76,18 @@ Environment variables (`.env`):
 | --------------- | -------------------------------- | ----------------------------------------- |
 | `GROQ_API_KEY`  | —                                | **required**, server-side only            |
 | `GROQ_MODEL`    | `openai/gpt-oss-120b`            | fallback `llama-3.3-70b-versatile`        |
-| `SAYMAN_RPC`    | `https://sayman.up.railway.app`  | REST API under `/api`. See note below.    |
+| `SAYMAN_RPC`    | `https://sayman.onrender.com`    | REST API under `/api`. See note below.    |
 | `PORT`          | `3001`                           | Render sets this automatically            |
 
 ### Which SAYMAN node?
 
-There are two public SAYMAN nodes and **they are separate chains, not synced peers**
-(different block heights, independent state):
+Default is **`https://sayman.onrender.com`**. There is also a second public node,
+`https://sayman.up.railway.app` — note the two are **separate chains, not synced peers**
+(different block heights, independent state). Override `SAYMAN_RPC` to switch.
 
-- **`https://sayman.up.railway.app`** — **default.** Verified to persist deployed
-  contracts for minutes. Use this so your deploys show up on the explorer.
-- `https://sayman.onrender.com` — a free Render instance that **resets its state every
-  ~30 seconds**, wiping deployed contracts. Avoid for anything you want to persist.
-
-The app is reset-aware regardless: if a contract read comes back 404 after deploy, the
-UI shows a "SAYMAN testnet reset — redeploy" banner instead of a confusing empty state.
+Heads-up: the public testnet periodically resets its state, wiping deployed contracts.
+The app is **reset-aware** — if a contract read comes back 404 after deploy, the UI shows
+a "SAYMAN testnet reset — redeploy" banner instead of a confusing empty state.
 
 ---
 
@@ -113,7 +110,7 @@ This repo ships a `render.yaml` **Blueprint**, so you have two paths:
 3. **Environment variables:**
    - `GROQ_API_KEY` = your key (**required**)
    - `GROQ_MODEL` = `openai/gpt-oss-120b` (optional)
-   - `SAYMAN_RPC` = `https://sayman.up.railway.app` (optional; this is the default)
+   - `SAYMAN_RPC` = `https://sayman.onrender.com` (optional; this is the default)
    - Do **not** set `PORT` — Render injects it and `npm start` reads `process.env.PORT`.
 4. Deploy. Express serves the built client and the API on one port.
 

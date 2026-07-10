@@ -10,10 +10,9 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
-// Default to the Railway node: it persists deployed contracts (verified stable for
-// minutes), whereas the Render free instance resets its state every ~30s. Override
-// with SAYMAN_RPC if you run your own node.
-const SAYMAN_RPC = (process.env.SAYMAN_RPC || 'https://sayman.up.railway.app').replace(/\/+$/, '');
+// Default SAYMAN node. Override with SAYMAN_RPC to point at another node
+// (e.g. https://sayman.up.railway.app, which persists deploys longer).
+const SAYMAN_RPC = (process.env.SAYMAN_RPC || 'https://sayman.onrender.com').replace(/\/+$/, '');
 
 app.use(express.json({ limit: '1mb' }));
 

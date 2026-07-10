@@ -47,6 +47,6 @@ export async function getServerConfig(): Promise<{ saymanRpc: string }> {
     if (!res.ok) throw new Error();
     return await res.json();
   } catch {
-    return { saymanRpc: 'https://sayman.up.railway.app' };
+    return { saymanRpc: 'https://sayman.onrender.com' };
   }
 }

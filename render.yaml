@@ -13,6 +13,6 @@ services:
       - key: GROQ_MODEL
         value: openai/gpt-oss-120b
       - key: SAYMAN_RPC
-        value: https://sayman.up.railway.app
+        value: https://sayman.onrender.com
       # PORT is injected by Render automatically — do not set it.
     healthCheckPath: /api/health

@@ -6,3 +6,12 @@ dist/
 *.log
 .DS_Store
 .vite/
+
+# scratch / temp files
+_*.mjs
+_*.txt
+s.out
+s.err
+srv*.out
+srv*.err
+*.bundle.mjs

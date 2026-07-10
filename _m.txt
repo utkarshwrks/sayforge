@@ -1,6 +1,0 @@
-Forward-compat: normalize contract state across field names
-
-Surface runtime state whether the node exposes it under state, storage, or
-data. The moment SAYMAN fixes contract state-readback, the interaction console
-reflects real post-call state with no code change. Verified full pipeline:
-Groq generate -> validate -> deploy -> Railway persists.
