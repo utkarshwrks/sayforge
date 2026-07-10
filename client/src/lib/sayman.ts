@@ -247,15 +247,40 @@ export async function getNonce(address: Hex): Promise<number> {
   }
 }
 
-export async function getContract(address: Hex): Promise<ContractObject | null> {
+export type ContractReadStatus = 'ok' | 'not_found' | 'error';
+
+// Rich read that distinguishes a genuine "contract not found" (the SAYMAN testnet
+// reset and wiped it) from a transient network/RPC error. The UI uses this to tell
+// a reset apart from an ordinary hiccup.
+export async function readContract(
+  address: Hex
+): Promise<{ status: ContractReadStatus; contract: ContractObject | null }> {
   try {
-    const d = await rpcGet<any>(`contracts/${address}`);
-    if (!d) return null;
-    const obj = d.contract ?? d;
-    return { address, ...obj } as ContractObject;
+    const res = await fetch(`${RPC_BASE}/contracts/${address.replace(/^\/+/, '')}`);
+    const text = await res.text();
+    const data = text ? safeJson(text) : null;
+
+    if (res.status === 404) return { status: 'not_found', contract: null };
+    if (!res.ok) return { status: 'error', contract: null };
+
+    const obj = data?.contract ?? data;
+    // Some nodes answer 200 with an error/string body when the contract is gone.
+    const asMsg = (obj?.error ?? (typeof obj === 'string' ? obj : '') ?? '')
+      .toString()
+      .toLowerCase();
+    if (!obj || obj.error || typeof obj === 'string') {
+      if (asMsg.includes('not found')) return { status: 'not_found', contract: null };
+      return { status: 'error', contract: null };
+    }
+    return { status: 'ok', contract: { address, ...obj } as ContractObject };
   } catch {
-    return null;
+    return { status: 'error', contract: null };
   }
+}
+
+export async function getContract(address: Hex): Promise<ContractObject | null> {
+  const { contract } = await readContract(address);
+  return contract;
 }
 
 export async function listContracts(): Promise<ContractObject[]> {
@@ -453,10 +478,13 @@ export function toBaseUnits(sayn: number, denomination = DEFAULT_DENOMINATION): 
   return Math.round(sayn * denomination);
 }
 
+// Link to endpoints that are guaranteed to resolve on the SAYMAN node. The
+// contract registry object (with code + state) lives at /api/contracts/:address.
 export function explorerContractUrl(base: string, address: string): string {
-  return `${base}/explorer/contract/${address}`;
+  return `${base}/api/contracts/${address}`;
 }
 
-export function explorerTxUrl(base: string, txId: string): string {
-  return `${base}/explorer/tx/${txId}`;
+export function explorerTxUrl(base: string, _txId: string): string {
+  // No per-tx route is documented; the recent blocks feed is the closest public view.
+  return `${base}/api/blocks`;
 }

@@ -19,7 +19,7 @@ export default function App() {
   const [code, setCode] = useState('');
   const [lastDescription, setLastDescription] = useState('');
   const [deployed, setDeployed] = useState<DeployedInfo | null>(null);
-  const [saymanRpc, setSaymanRpc] = useState('https://sayman.onrender.com');
+  const [saymanRpc, setSaymanRpc] = useState('https://sayman.up.railway.app');
 
   useEffect(() => {
     getServerConfig().then((c) => setSaymanRpc(c.saymanRpc)).catch(() => {});
@@ -105,6 +105,10 @@ export default function App() {
               saymanRpc={saymanRpc}
               deployed={deployed}
               onDeployed={setDeployed}
+              onRedeploy={() => {
+                setDeployed(null);
+                w.refreshBalance();
+              }}
             />
           </>
         )}

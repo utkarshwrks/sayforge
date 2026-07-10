@@ -4,6 +4,7 @@ import type { ContractMethod, MethodArg } from '../lib/api';
 import {
   callContract,
   getContract,
+  readContract,
   pollContractState,
   type ContractObject,
 } from '../lib/sayman';
@@ -12,18 +13,26 @@ export default function InteractionConsole({
   w,
   address,
   methods,
+  onRedeploy,
 }: {
   w: UseWallet;
   address: string;
   methods: ContractMethod[];
+  onRedeploy?: () => void;
 }) {
   const [contract, setContract] = useState<ContractObject | null>(null);
   const [loadingState, setLoadingState] = useState(false);
+  const [wiped, setWiped] = useState(false);
 
   const loadState = useCallback(async () => {
     setLoadingState(true);
-    const c = await getContract(address).catch(() => null);
-    if (c) setContract(c);
+    const { status, contract: c } = await readContract(address);
+    if (status === 'not_found') {
+      setWiped(true);
+    } else if (status === 'ok' && c) {
+      setWiped(false);
+      setContract(c);
+    }
     setLoadingState(false);
   }, [address]);
 
@@ -32,7 +41,9 @@ export default function InteractionConsole({
   }, [loadState]);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+    <div className="space-y-4">
+      {wiped && <ResetBanner onRedeploy={onRedeploy} />}
+      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-forge-text">Interaction console</h3>
         {methods.length === 0 && (
@@ -45,6 +56,7 @@ export default function InteractionConsole({
             address={address}
             method={m}
             onStateMaybeChanged={loadState}
+            onWiped={() => setWiped(true)}
           />
         ))}
       </div>
@@ -66,6 +78,30 @@ export default function InteractionConsole({
           </pre>
         </div>
       </div>
+      </div>
+    </div>
+  );
+}
+
+function ResetBanner({ onRedeploy }: { onRedeploy?: () => void }) {
+  return (
+    <div className="rounded-xl border border-forge-warn/50 bg-forge-warn/10 p-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-lg">♻️</span>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-forge-warn">SAYMAN testnet reset — contract wiped</p>
+          <p className="mt-0.5 text-xs text-forge-muted">
+            The public testnet (a free instance) periodically resets its state, erasing deployed
+            contracts, balances, and nonces. Your deploy was valid and landed on-chain; the node
+            simply rolled back. Re-fund if needed, then redeploy to get a fresh live contract.
+          </p>
+        </div>
+        {onRedeploy && (
+          <button onClick={onRedeploy} className="btn btn-primary py-1.5">
+            Redeploy
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -84,11 +120,13 @@ function MethodCard({
   address,
   method,
   onStateMaybeChanged,
+  onWiped,
 }: {
   w: UseWallet;
   address: string;
   method: ContractMethod;
   onStateMaybeChanged: () => void;
+  onWiped: () => void;
 }) {
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'busy' | 'ok' | 'error'>('idle');
@@ -108,7 +146,13 @@ function MethodCard({
     setMsg('Reading state…');
     setResult('');
     try {
-      const c = await getContract(address);
+      const { status: rs, contract: c } = await readContract(address);
+      if (rs === 'not_found') {
+        onWiped();
+        setStatus('error');
+        setMsg('Contract no longer on-chain — the testnet reset. Redeploy from the banner above.');
+        return;
+      }
       // For read-only methods we surface the whole state; if a same-named state key
       // exists we highlight it as the likely return value.
       const state = c?.state ?? {};
@@ -153,6 +197,15 @@ function MethodCard({
         timeoutMs: 16000,
         intervalMs: 1500,
       });
+
+      // If the contract vanished while we polled, the testnet reset mid-call.
+      const after = await readContract(address);
+      if (after.status === 'not_found') {
+        onWiped();
+        setStatus('error');
+        setMsg('The testnet reset mid-call and wiped the contract. Redeploy from the banner above.');
+        return;
+      }
 
       const changed = updated && JSON.stringify(updated.state ?? {}) !== prevStateJson;
       setResult(

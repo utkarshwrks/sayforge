@@ -18,6 +18,7 @@ export default function ReviewScreen({
   saymanRpc,
   deployed,
   onDeployed,
+  onRedeploy,
 }: {
   w: UseWallet;
   contract: GeneratedContract;
@@ -29,6 +30,7 @@ export default function ReviewScreen({
   saymanRpc: string;
   deployed: DeployedInfo | null;
   onDeployed: (info: DeployedInfo) => void;
+  onRedeploy: () => void;
 }) {
   const validation = useMemo(() => validateContract(code), [code]);
   const canDeploy = validation.level !== 'fail';
@@ -75,7 +77,12 @@ export default function ReviewScreen({
 
       {deployed && (
         <div className="border-t border-forge-border pt-5">
-          <InteractionConsole w={w} address={deployed.address} methods={contract.methods} />
+          <InteractionConsole
+            w={w}
+            address={deployed.address}
+            methods={contract.methods}
+            onRedeploy={onRedeploy}
+          />
         </div>
       )}
     </div>

@@ -1,0 +1,18 @@
+# Render Blueprint — one-click deploy for SAYFORGE.
+# In Render: New → Blueprint → point at this repo. Then set GROQ_API_KEY.
+services:
+  - type: web
+    name: sayforge
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false # set this in the Render dashboard (never commit it)
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      - key: SAYMAN_RPC
+        value: https://sayman.up.railway.app
+      # PORT is injected by Render automatically — do not set it.
+    healthCheckPath: /api/health
