@@ -272,7 +272,15 @@ export async function readContract(
       if (asMsg.includes('not found')) return { status: 'not_found', contract: null };
       return { status: 'error', contract: null };
     }
-    return { status: 'ok', contract: { address, ...obj } as ContractObject };
+    // Normalize the state field: different SAYMAN builds expose runtime state under
+    // `state`, `storage`, or `data`. Whichever is populated, surface it as `.state`
+    // so the UI reflects real state the moment the node starts returning it — no
+    // code change needed when the chain's state-readback is fixed.
+    const normalizedState = normalizeState(obj);
+    return {
+      status: 'ok',
+      contract: { address, ...obj, state: normalizedState } as ContractObject,
+    };
   } catch {
     return { status: 'error', contract: null };
   }
@@ -281,6 +289,19 @@ export async function readContract(
 export async function getContract(address: Hex): Promise<ContractObject | null> {
   const { contract } = await readContract(address);
   return contract;
+}
+
+// Pick the first populated state-like field. Returns {} if none carry data.
+function normalizeState(obj: any): Record<string, unknown> {
+  for (const key of ['state', 'storage', 'data']) {
+    const v = obj?.[key];
+    if (v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length > 0) {
+      return v as Record<string, unknown>;
+    }
+  }
+  // Fall back to `state` even if empty, so shape stays consistent.
+  const s = obj?.state;
+  return s && typeof s === 'object' ? (s as Record<string, unknown>) : {};
 }
 
 export async function listContracts(): Promise<ContractObject[]> {
