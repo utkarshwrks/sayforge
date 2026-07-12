@@ -10,7 +10,8 @@
     "dev:client": "vite",
     "build": "vite build",
     "start": "cross-env NODE_ENV=production node server/index.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "node scripts/deploy.js"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",

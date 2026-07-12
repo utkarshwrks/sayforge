@@ -1,0 +1,26 @@
+{
+  "network": "sayman-testnet",
+  "rpc": "https://sayman.onrender.com",
+  "deployer": "c0daa3c20a0fdc7fa38be4d252735410c7a2c0db",
+  "deployedAt": "2026-07-12T16:36:49.098Z",
+  "contracts": [
+    {
+      "name": "TipJar",
+      "address": "edc9f5e7f5e5c7bfe012fde49afc05f81ba6615c",
+      "txId": "0f7308dc-71c6-4f3c-91d2-480b6057365b",
+      "status": "deployed"
+    },
+    {
+      "name": "Counter",
+      "address": "a2f5e005aa90690483c35f88a5ef2ca1f9475331",
+      "txId": "03580a74-4a70-49db-a255-7036e96cf808",
+      "status": "deployed"
+    },
+    {
+      "name": "Poll3",
+      "address": "50764a8895dba943cdba1d18469b6123fcf32294",
+      "txId": "ce459a84-fe16-4fa9-a267-58bc071020a3",
+      "status": "deployed"
+    }
+  ]
+}
