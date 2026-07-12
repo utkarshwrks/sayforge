@@ -89,8 +89,19 @@ function deployGasLimit(code) {
 }
 
 // ------------------------------- rpc -----------------------------------------
+// fetch with a hard timeout — the public nodes (free tier) can be slow or hang.
+async function fetchT(url, opts = {}, ms = 15_000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function rpcGet(pathname) {
-  const res = await fetch(`${API}/${pathname.replace(/^\/+/, '')}`);
+  const res = await fetchT(`${API}/${pathname.replace(/^\/+/, '')}`);
   const text = await res.text();
   const data = text ? safeJson(text) : null;
   if (!res.ok) throw new Error(errMsg(data) || `GET ${pathname} failed (${res.status})`);
@@ -98,7 +109,7 @@ async function rpcGet(pathname) {
 }
 
 async function rpcPost(pathname, body) {
-  const res = await fetch(`${API}/${pathname.replace(/^\/+/, '')}`, {
+  const res = await fetchT(`${API}/${pathname.replace(/^\/+/, '')}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -145,6 +156,39 @@ async function listContracts() {
 
 async function requestFaucet(address) {
   return rpcPost('faucet', { address });
+}
+
+// Highest block index the node currently reports.
+async function chainTip() {
+  const d = await rpcGet('blocks').catch(() => null);
+  const arr = Array.isArray(d) ? d : d?.blocks ?? [];
+  const idx = arr.map((b) => Number(b.index)).filter((n) => !Number.isNaN(n));
+  return idx.length ? Math.max(...idx) : null;
+}
+
+// A SAYMAN transaction only settles when a NEW block is produced. On the public
+// testnet the block producer sometimes stops (the chain "freezes"): the faucet
+// and deploys are accepted into the mempool but never confirm. Detect that up
+// front so we don't generate wallets and hang. With `wait`, keep polling until
+// the tip advances (up to 20 min) and auto-proceed the moment it recovers.
+async function waitForLiveChain(wait) {
+  const first = await chainTip();
+  console.log(`  Chain tip: block #${first ?? '?'}`);
+  if (first == null) {
+    console.log('  Could not read the chain tip — the node may be unreachable.\n');
+    return false;
+  }
+  const deadline = Date.now() + (wait ? 20 * 60_000 : 14_000);
+  while (Date.now() < deadline) {
+    await sleep(wait ? 10_000 : 7_000);
+    const now = await chainTip();
+    if (now != null && now > first) {
+      console.log(`  Chain is LIVE — advanced to #${now}. Proceeding.\n`);
+      return true;
+    }
+    if (wait) console.log(`  still frozen at #${now ?? '?'} — waiting for the SAYMAN node to resume…`);
+  }
+  return false;
 }
 
 async function broadcast(signed) {
@@ -194,8 +238,25 @@ function loadDeployer() {
 
 // --------------------------------- main --------------------------------------
 async function main() {
+  const wait = process.argv.includes('--wait');
   console.log('\n  SAYMAN contract deploy');
   console.log(`  RPC  → ${RPC}\n`);
+
+  // Refuse to deploy against a frozen chain — nothing would ever confirm.
+  const live = await waitForLiveChain(wait);
+  if (!live) {
+    console.log('  ────────────────────────────────────────────────────────────');
+    console.log('  The SAYMAN testnet is NOT producing blocks right now (frozen).');
+    console.log('  Faucet drips and deploys are accepted but can never confirm');
+    console.log('  until the node operator restarts block production. This is on');
+    console.log('  their side — nothing is wrong with your wallet or this project.');
+    console.log('');
+    console.log('  → Re-run later, or leave it waiting to auto-deploy on recovery:');
+    console.log('        npm run deploy -- --wait');
+    console.log('  ────────────────────────────────────────────────────────────\n');
+    process.exitCode = 1;
+    return;
+  }
 
   const { wallet, generated } = loadDeployer();
   console.log(`  Deployer address : ${wallet.address}`);
