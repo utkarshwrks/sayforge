@@ -12,7 +12,9 @@
     "start": "cross-env NODE_ENV=production node server/index.js",
     "preview": "vite preview",
     "deploy": "node scripts/deploy.js",
-    "deploy:wait": "node scripts/deploy.js --wait"
+    "deploy:wait": "node scripts/deploy.js --wait",
+    "call": "node scripts/call.js",
+    "call:wait": "node scripts/call.js --wait"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
