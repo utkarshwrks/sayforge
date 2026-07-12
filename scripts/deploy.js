@@ -172,21 +172,33 @@ async function chainTip() {
 // front so we don't generate wallets and hang. With `wait`, keep polling until
 // the tip advances (up to 20 min) and auto-proceed the moment it recovers.
 async function waitForLiveChain(wait) {
-  const first = await chainTip();
-  console.log(`  Chain tip: block #${first ?? '?'}`);
-  if (first == null) {
-    console.log('  Could not read the chain tip — the node may be unreachable.\n');
-    return false;
-  }
-  const deadline = Date.now() + (wait ? 20 * 60_000 : 14_000);
+  let baseline = await chainTip();
+  console.log(`  Chain tip: block #${baseline ?? '(node unreachable)'}`);
+  // In wait mode we run for a long time; in one-shot mode just a quick probe.
+  const deadline = Date.now() + (wait ? 6 * 60 * 60_000 : 14_000);
+  let ticks = 0;
   while (Date.now() < deadline) {
     await sleep(wait ? 10_000 : 7_000);
     const now = await chainTip();
-    if (now != null && now > first) {
+    ticks++;
+    if (now == null) {
+      // Transient: node cold-starting / briefly down. Keep waiting, don't bail.
+      if (wait && ticks % 6 === 0) console.log('  node unreachable — retrying…');
+      continue;
+    }
+    if (baseline == null) {
+      // First successful read: establish the baseline and keep watching.
+      baseline = now;
+      console.log(`  Chain tip: block #${baseline}`);
+      continue;
+    }
+    if (now > baseline) {
       console.log(`  Chain is LIVE — advanced to #${now}. Proceeding.\n`);
       return true;
     }
-    if (wait) console.log(`  still frozen at #${now ?? '?'} — waiting for the SAYMAN node to resume…`);
+    if (wait && ticks % 6 === 0) {
+      console.log(`  still frozen at #${now} — waiting for the SAYMAN node to resume…`);
+    }
   }
   return false;
 }
