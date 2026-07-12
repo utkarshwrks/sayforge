@@ -1,25 +1,25 @@
 {
   "network": "sayman-testnet",
-  "rpc": "https://sayman.onrender.com",
+  "rpc": "https://sayman.up.railway.app",
   "deployer": "c0daa3c20a0fdc7fa38be4d252735410c7a2c0db",
-  "deployedAt": "2026-07-12T16:36:49.098Z",
+  "deployedAt": "2026-07-12T18:29:01.016Z",
   "contracts": [
     {
       "name": "TipJar",
-      "address": "edc9f5e7f5e5c7bfe012fde49afc05f81ba6615c",
-      "txId": "0f7308dc-71c6-4f3c-91d2-480b6057365b",
+      "address": "53cfdb6dfb8bbf247d93b0091f2a7439692bcac9",
+      "txId": "b0f4815a-9a0a-45a5-8094-910c5e6da822",
       "status": "deployed"
     },
     {
       "name": "Counter",
-      "address": "a2f5e005aa90690483c35f88a5ef2ca1f9475331",
-      "txId": "03580a74-4a70-49db-a255-7036e96cf808",
+      "address": "416fb84a0f3df41c8aaabf46a2e4a8232640130f",
+      "txId": "44c12bc2-468e-4a4a-b3c6-1780cc4708fe",
       "status": "deployed"
     },
     {
       "name": "Poll3",
-      "address": "50764a8895dba943cdba1d18469b6123fcf32294",
-      "txId": "ce459a84-fe16-4fa9-a267-58bc071020a3",
+      "address": "c735cb1f6774b9af80d92070a0eff8f6c1f0345e",
+      "txId": "553537ae-0008-41cf-a228-16f9eb858408",
       "status": "deployed"
     }
   ]
